@@ -1,48 +1,64 @@
-import json
+from typing import List
 
-import products
-from cart import dao
-from products import Product
+from products import dao
 
 
-class Cart:
-    def __init__(self, id: int, username: str, contents: list[Product], cost: float):
+class Product:
+    """Represents a product with its attributes."""
+
+    def __init__(self, id: int, name: str, description: str, cost: float, qty: int):
+        """
+        Initializes a Product object.
+
+        Args:
+            id: The unique identifier of the product.
+            name: The name of the product.
+            description: A description of the product.
+            cost: The cost of the product.
+            qty: The quantity of the product in stock.
+        """
         self.id = id
-        self.username = username
-        self.contents = contents
+        self.name = name
+        self.description = description
         self.cost = cost
+        self.qty = qty
 
-    def load(data):
-        return Cart(data['id'], data['username'], data['contents'], data['cost'])
+    @staticmethod
+    def load(data: dict) -> 'Product':
+        """
+        Creates a Product object from a dictionary.
 
+        Args:
+            data: A dictionary containing product data.
 
-def get_cart(username: str) -> list:
-    cart_details = dao.get_cart(username)
-    if cart_details is None:
-        return []
-    
-    items = []
-    for cart_detail in cart_details:
-        contents = cart_detail['contents']
-        evaluated_contents = eval(contents)  
-        for content in evaluated_contents:
-            items.append(content)
-    
-    i2 = []
-    for i in items:
-        temp_product = products.get_product(i)
-        i2.append(temp_product)
-    return i2
-
-    
+        Returns:
+            A Product object.
+        """
+        return Product(
+            data['id'], data['name'], data['description'], data['cost'], data['qty']
+        )
 
 
-def add_to_cart(username: str, product_id: int):
-    dao.add_to_cart(username, product_id)
+def list_products() -> List[Product]:
+    """
+    Lists all available products.
+
+    Returns:
+        A list of Product objects.
+    """
+    products = dao.list_products()
+    return [Product.load(product) for product in products]
 
 
-def remove_from_cart(username: str, product_id: int):
-    dao.remove_from_cart(username, product_id)
+def get_product_details(product_ids: List[int]) -> List[Product]:
+    """
+    Gets details for a list of product IDs.
 
-def delete_cart(username: str):
-    dao.delete_cart(username)
+    Args:
+        product_ids: A list of product IDs.
+
+    Returns:
+        A list of Product objects corresponding to the provided IDs.
+    """
+    products = dao.get_products_bulk(product_ids)
+    return [Product.load(product) for product in products]
